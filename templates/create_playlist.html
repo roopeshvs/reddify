@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>{% block title %}redify{% endblock title %}</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='create_playlist.css') }}">
+        <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    </head>
+{% block scripts %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('form').submit(function(event) {
+        $('#loader').addClass('loader');
+    });
+});
+</script>
+{% endblock %}
+<body>
+    <section>
+    {% block content %}
+    <form method="post" role="search">
+        <label for="Reddit Post URL">Reddit Post URL</label>
+        <input id="url" type="url" name="url" placeholder="Paste Reddit post link..." autofocus required />
+        <button type="submit">Create Playlist</button>    
+    </form>
+    {% endblock %}
+    <br><br>
+    <div>
+        <p id="loader"></p>
+        </div>
+    </section> 
+    
+</body>
+</html>

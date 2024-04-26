@@ -1,0 +1,4 @@
+nltk==3.8.1
+praw==7.7.1
+python-dotenv==1.0.1
+spotipy==2.23.0
