@@ -2,3 +2,6 @@ nltk==3.8.1
 praw==7.7.1
 python-dotenv==1.0.1
 spotipy==2.23.0
+Flask==3.0.3
+emoji==2.11.1
+python-dotenv==1.0.1
