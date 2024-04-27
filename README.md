@@ -44,7 +44,7 @@ Contributions are welcome! If you'd like to contribute to Reddify, please follow
 4. Push to the branch: `git push origin feature/your-feature-name`
 5. Open a pull request
 
-Feel free to open a PR to start a discussion if your change is large.
+Recommend to open an issue to start a discussion if your change is large.
 
 ## License
 
