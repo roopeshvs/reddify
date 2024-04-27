@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
     <head>
-        <title>{% block title %}redify{% endblock title %}</title>
+        <title>{% block title %}Reddify{% endblock title %}</title>
         <link rel="stylesheet" href="{{ url_for('static', filename='create_playlist.css') }}">
         <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
     </head>
@@ -16,7 +16,6 @@ $(document).ready(function() {
 </script>
 {% endblock %}
 <body>
-    <section>
     {% block content %}
     <form method="post" role="search">
         <label for="Reddit Post URL">Reddit Post URL</label>
@@ -24,11 +23,14 @@ $(document).ready(function() {
         <button type="submit">Create Playlist</button>    
     </form>
     {% endblock %}
-    <br><br>
+    {% block messages %}
+    {% for category, message in get_flashed_messages(with_categories=true) %}
+    <p></p>
+    <div class="flash {{ category }}">{{ message }}</div>
+    {% endfor %}
+    {% endblock %}
     <div>
         <p id="loader"></p>
-        </div>
-    </section> 
-    
+    </div>
 </body>
 </html>
