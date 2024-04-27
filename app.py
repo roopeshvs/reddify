@@ -108,9 +108,9 @@ def create_playlist():
         url = request.form['url']
         pattern = r"(https?://)?(www\.)?reddit\.com/r/[\w-]+/comments/[\w-]+/?"
         if not re.match(pattern, url):
-            flash("""❗ Invalid URL pattern. 
-                  If you copied the link from the Reddit mobile app, 
-                  please paste the copied link in your browser to get the full URL.""", "error")
+            flash("""Invalid URL pattern. 
+                  If you copied the link from Reddit mobile app, 
+                  please paste the copied link in your browser to get the expanded link.""", "error")
             return redirect(url_for('create_playlist'))
         try:
             playlist_name = create_playlist_title_from_post_title(reddit, url)
@@ -121,7 +121,7 @@ def create_playlist():
                 reddit_post_comments, spotify_client, playlist)
         except Exception as e:
             flash(
-                "❗ Uh Oh! An unknown error has occurred. Please check the URL and try again.", "error")
+                "Uh Oh! An unknown error has occurred. Please check the link and try again.", "error")
             return redirect(url_for('create_playlist'))
         return redirect(url_for('success',  playlist_url=playlist['external_urls']['spotify']))
     return render_template('create_playlist.html')

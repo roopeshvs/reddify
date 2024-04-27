@@ -93,18 +93,23 @@
   
   .flash {
     position: absolute;
-    top: calc(60%); /* Place below the input */
-    width: calc(100% - var(--btn-width)); /* Set width to match input box */
-    text-align: center; /* Center text horizontally */
+    top: calc(60%); 
+    width: calc(60%); 
+    text-align: center; 
+    background-color: #874949;
+    border: 1px solid #fcc2c3;
+    float: left;
+    padding: 20px 30px;
+    border-radius: var(--rad);
   }
 
   .flash.error {
-    font-size: 2.5rem;;
+    font-size: 1rem;;
     color: #fff;
   }
   
   .flash.success {
-    font-size: 2.5rem;;
+    font-size: 1rem;;
     color: #1DB954;
   }
   
