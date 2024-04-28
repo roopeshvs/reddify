@@ -1,12 +1,15 @@
 name: deploy
 
 on:
-  push:
+  pull_request:
+    types:
+      - closed
     branch:
       - develop
 
 jobs:
-  build:
+  deploy:
+    if: github.event.pull_request.merged == true
     runs-on: self-hosted
     steps:
     - uses: actions/checkout@v4
