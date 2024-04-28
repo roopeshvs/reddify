@@ -13,11 +13,14 @@ jobs:
     runs-on: self-hosted
     steps:
     - uses: actions/checkout@v4
+      path: reddify-${{ github.run_id }}-${{ github.run_number }}
+    = name: Move files to the deployment directory
+      run: |
+        mv reddify-${{ github.run_id }}-${{ github.run_number }} ${{ secrets.REDDIFY_PATH }}
     - name: Deploy 
       run: |
-        git pull origin develop
         source venv/bin/activate
         pip install --upgrade pip
         pip install -r requirements.txt
-        systemctl restart ${{ secrets.REDDIFY_SERVICE }}
+        systemctl restart reddify
       working-directory: ${{ secrets.REDDIFY_PATH }}
