@@ -17,9 +17,9 @@ body {
     justify-content: center;
     min-height: 100vh;
     color: var(--color-light);
-    margin: 0; /* Add margin reset */
-    font-family: var(--font-fam); /* Apply font family */
-    font-size: 16px; /* Increase base font size */
+    margin: 0;
+    font-family: var(--font-fam);
+    font-size: 16px;
 }
 
 html {
@@ -37,7 +37,6 @@ html {
     text-align: center;
 }
 
-/* CSS */
 .button-74 {
     background-color: #fff;
     border: 2px solid #000000;
@@ -47,9 +46,9 @@ html {
     cursor: pointer;
     display: inline-block;
     font-weight: 600;
-    font-size: 20px; /* Increase button font size */
-    padding: 0 20px; /* Increase button padding */
-    line-height: 54px; /* Increase button line height */
+    font-size: 20px;
+    padding: 0 20px;
+    line-height: 54px;
     text-align: center;
     text-decoration: none;
     user-select: none;

@@ -4,6 +4,7 @@
         <title>{% block title %}Reddify{% endblock title %}</title>
         <link rel="stylesheet" href="{{ url_for('static', filename='success.css') }}">
         <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     </head>
 <body>
     <section>
@@ -12,7 +13,7 @@
         <p> Hooray! </p>
         <p> {{ username }}, your playlist is ready! 🎉</p>
         <form target="_blank" action="{{ playlist_url }}" method="get">
-            <button class="button-74" role="button" type="submit">Open Playlist</button>
+            <button class="button-74" role="button" type="submit">Open <i class="fa fa-spotify"></i> Playlist</button>
         </form>
         <br>
         <a href="{{ url_for('index') }}">Create another?</a>

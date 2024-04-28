@@ -16,8 +16,8 @@
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    margin: 0; /* Remove default body margin */
-    font-size: 1.6rem; /* Set base font size */
+    margin: 0;
+    font-size: 1.6rem;
     font-family: var(--font-fam);
   }
   
@@ -34,8 +34,8 @@
   
   form {
     position: relative;
-    width: 90%; /* Adjust width for responsiveness */
-    max-width: 60rem; /* Set max width */
+    width: 90%;
+    max-width: 60rem;
     background: var(--color-brand);
     border-radius: var(--rad);
   }
@@ -117,12 +117,12 @@
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    margin: auto; /* Center the loader horizontally */
+    margin: auto;
     position: absolute;
-    top: 75%; /* Center the loader vertically */
+    top: 75%;
     left: 0;
     right: 0;
-    transform: translateY(-50%); /* Adjust vertically */
+    transform: translateY(-50%);
     background: #FFF;
     box-shadow: -24px 0 #FFF, 24px 0 #FFF;
     box-sizing: border-box;
