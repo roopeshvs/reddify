@@ -1,0 +1,22 @@
+name: deploy
+
+on:
+  pull_request:
+    types:
+      - closed
+    branch:
+      - develop
+
+jobs:
+  deploy:
+    if: github.event.pull_request.merged == true
+    runs-on: self-hosted
+    steps:
+    - uses: actions/checkout@v4
+    - name: Deploy 
+      run: |
+        cp -r . ${REDDIFY_PATH}
+        source venv/bin/activate
+        pip install --upgrade pip
+        pip install -r requirements.txt
+        systemctl restart ${REDDIFY_SERVICE}
