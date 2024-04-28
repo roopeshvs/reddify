@@ -28,7 +28,7 @@ To install and run Reddify locally, follow these steps:
 - `SPOTIFY_MARKET` - This is optional. Must be one of the country codes from the list [here](https://developer.spotify.com/documentation/web-api/reference/get-available-markets). Defaults to `US`. This setting can help in identifying songs not in English.
 - `SECRET_KEY` - This key is used to securely sign the session cookie. You can generate one using this command `python -c 'import secrets; print(secrets.token_hex())'`
 
-4. Start the application: `python app.py`
+5. Start the application: `python app.py`
 
 ## Note on usage
 
@@ -52,4 +52,4 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## Contact
 
-If you have any questions or suggestions, feel free to open an issue or reach out at [roopesh@mail.pesh.dev](mailto:roopesh@mail.pesh.dev).
+If you have any questions or suggestions, feel free to open an issue or reach out to [roopesh@mail.pesh.dev](mailto:roopesh@mail.pesh.dev).
