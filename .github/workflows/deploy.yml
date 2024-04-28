@@ -15,9 +15,9 @@ jobs:
     - uses: actions/checkout@v4
     - name: Deploy 
       run: |
-        cp -r . ${{ secrets.REDDIFY_PATH }}
-        cd ${{ secrets.REDDIFY_PATH }}
+        git pull origin develop
         source venv/bin/activate
         pip install --upgrade pip
         pip install -r requirements.txt
         systemctl restart ${{ secrets.REDDIFY_SERVICE }}
+      working-directory: ${{ secrets.REDDIFY_PATH }}
