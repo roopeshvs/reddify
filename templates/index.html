@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Reddify</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    </head>
+    <body>
+        <div id="container">
+        </div> 
+    </body>
+</html>
+
+<style>
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background-color: rgb(0, 0, 0);
+  font-family: Helvetica, sans-serif;
+}
+
+
+#container{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+#search{
+    background-color: rgb(0, 0, 0);
+    border:1rem;
+    padding: 1.2rem;
+    margin: 1rem;
+    border-radius: 0.8rem;
+    color: white;
+    width: 80%;
+    position: relative;
+    top: -28%;
+}
+
+input[type="url"]{
+    background-color: white;
+    border:1rem;
+    padding: 1.2rem;
+    margin: 1rem;
+    border-radius: 0.8rem;
+    color: black;
+    width: 75%;
+}
+
+#error-box{
+    background-color: white;
+    border: 0.2rem solid rgb(236, 133, 133);
+    padding: 1.2rem;
+    margin: 1rem;
+    border-radius: 0.8rem;
+}
+
+#search-form{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    margin:auto;
+}
+
+.search-btn{
+    cursor: pointer;
+    background-color: rgb(255, 255, 255);
+    border: 1.5rem;
+    border-radius: 3rem;
+    width: 9rem;
+    height: 2.1rem;
+    color: black;
+    font-size: 1.2rem;
+    margin: 0.8rem;
+}
+
+.search-btn:hover, .search-btn:active{
+    background-color: #1DB954;
+}
+
+.search-btn:disabled{
+    color: grey;
+}
+
+#status{
+    background-color: black;
+    border:1rem;
+    padding: 1.2rem;
+    margin: 1rem;
+    border-radius: 0.8rem;
+    width: 60%;
+    position: absolute;
+    top: 27%;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+}
+
+.status-text{
+    color: #1DB954;
+    font-family: monospace;
+    font-size: 1rem;
+    float:left;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+#song-list{
+    background-color: black;
+    border:1rem;
+    padding: 1.2rem;
+    margin: 1rem;
+    border-radius: 0.8rem;
+    width: 80%;
+    height: 50%;
+    position: absolute;
+    top: 40%; 
+    text-align: center;
+    overflow-y:auto; 
+}
+
+.song{
+    background-color: black;
+    border:1rem;
+    padding: 1.2rem;
+    margin: 1rem;
+    border-radius: 0.8rem;
+    color: white;
+}
+
+
+.btn{
+    cursor: pointer;
+    background-color: white;
+    border: 1.5rem;
+    border-radius: 3rem;
+    width: 15rem;
+    height: 3rem;
+    color: black;
+    font-size: 1.2rem;
+}
+
+.btn:hover, .btn:active{
+    background-color: #1DB954;
+}
+
+.login{
+    text-decoration: none;
+    color: white;
+}
+
+.bars-1 {
+  width: 1rem;
+  aspect-ratio: 1;
+  --c: no-repeat linear-gradient(#1DB954 0 0);
+  background: 
+    var(--c) 0%   50%,
+    var(--c) 50%  50%,
+    var(--c) 100% 50%;
+  background-size: 20% 100%;
+  animation: b1 1s infinite linear;
+  display: flex; 
+  flex: 1; 
+  margin-left: 4rem;
+  margin-right: 4rem;
+}
+
+.playlist-container{
+    background-color: black;
+    position: absolute;
+    top: 35%;
+    display: flex;
+    justify-content: center;
+}
+
+.playlist-btn{
+    cursor: pointer;
+    background-color: #1DB954;
+    border: 1.5rem;
+    border-radius: 3rem;
+    width: 13rem;
+    height: 2.5rem;
+    color: black;
+    font-size: 1.5rem;
+    position: relative;
+}
+
+.playlist-btn:hover, .playlist-btn:active{
+    background-color: white;
+}
+
+@keyframes b1 {
+  0%  {background-size: 20% 100%,20% 100%,20% 100%}
+  33% {background-size: 20% 10% ,20% 100%,20% 100%}
+  50% {background-size: 20% 100%,20% 10% ,20% 100%}
+  66% {background-size: 20% 100%,20% 100%,20% 10% }
+  100%{background-size: 20% 100%,20% 100%,20% 100%}
+}
+
+.location{
+    display: flex;
+}
+
+#location-selector{
+    background-color: white;
+    border:1rem;
+    border-radius: 0.8rem;
+    color: black;
+    width: 6%;
+    padding-left: 1rem;
+    position:absolute;
+    top:0;
+    right:0;
+}
+
+.location:after {
+    font-family: 'FontAwesome';
+    content: '\f041';
+    position: absolute;
+    color: black;
+    right: 1.2rem;
+    top: 0;
+}
+
+
+@media only screen and (max-width: 768px) {
+  #search {
+    width: 90%;
+  }
+
+  input[type="url"] {
+    width: 85%;
+  }
+
+  #status {
+    width: 70%;
+  }
+
+  #song-list {
+    width: 90%;
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  #search {
+    width: 95%;
+  }
+
+  input[type="url"] {
+    width: 90%;
+  }
+
+  #status {
+    width: 80%;
+  }
+
+  #song-list {
+    width: 95%;
+  }
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+
+
+    var container = document.getElementById("container");
+    
+    function refreshToken(){
+
+        var cookie = getCookie("refreshToken");
+
+        axios.get("/refresh_token",{ params : {"refresh_token":cookie}})
+        .then(function(response){
+            document.cookie = "accessToken="+response.data['access_token'];
+        })
+        .catch(function (error) {
+            container.innerHTML = `Error`
+        });
+    }
+
+    setInterval(function() {
+        refreshToken();
+    }, 5 * 60 * 1000);
+
+    function search(){
+        var url = document.getElementById("url").value;
+        var location = document.getElementById("location-selector").value;
+        if (document.getElementById("song-list") != null)
+            document.getElementById("song-list").remove();
+        if (document.getElementById("playlist-container") != null)
+            document.getElementById("playlist-container").remove();
+        if (document.getElementById("status-text") != null)
+            document.getElementById("status-text").remove();
+        if (document.getElementsByClassName("song")){
+            var songs = document.getElementsByClassName("song");
+            while(songs.length > 0){
+                songs[0].remove();
+            }
+        }
+        const container = document.querySelector("#container");
+        const status = document.querySelector("#status");
+
+        document.getElementById("search-btn").disabled = true;
+        if (url == "" || !url.includes("reddit.com")){
+            status.innerHTML = `<div class="status-text" id="status-text"> Invalid URL. Please enter a valid Reddit Post URL.</div> `
+            document.getElementById("search-btn").disabled = false;
+            return;
+        }
+        if (!url.match(/https:\/\/www.reddit.com\/r\/[a-zA-Z0-9]+\/comments\/[a-zA-Z0-9]+\/[a-zA-Z0-9]+/)){
+            status.innerHTML = `<div class="status-text" id="status-text"> Invalid URL Pattern. If you copied the link using the Mobile App, paste the copied link into your browser, copy and paste the expanded link here.</div> `
+            document.getElementById("search-btn").disabled = false;
+            return;
+        }
+        var locations = document.getElementById('locations').children
+        var flag = false
+        for(let i = 0; i < locations.length; i++){
+            flag = locations[i].value === location || flag
+        }
+        if (!flag){
+            status.innerHTML = `<div class="status-text" id="status-text"> Invalid Spotify Market. Please select a valid Spotify Market from the dropdown list.</div> `
+            document.getElementById("search-btn").disabled = false;
+            return;
+        }
+        var ws = new WebSocket("ws://localhost:8091/ws/"+ uuidv4());
+        ws.onopen = function(){
+            ws.send(url);
+            ws.send(location);
+        }
+        container.insertAdjacentHTML("beforeend", `<div id="song-list"></div>`);
+        ws.onmessage = function(event){
+            console.log(event.data);
+            var data = JSON.parse(event.data);
+            if(data.hasOwnProperty('status') && data["status"].startsWith("Hooray")){
+                document.getElementById("search-btn").disabled = false;
+                status.innerHTML = `<div class="status-text" id="status-text"> ${data["status"]}</div>`
+                container.insertAdjacentHTML("beforeend", `<div class = "playlist-container" id="playlist-container"><button class="playlist-btn" onclick="window.open('${data["playlist_url"]}', '_blank')">Open <i class="fa fa-spotify"></i> Playlist</button></div>`)
+            } else if (data.hasOwnProperty('status')){
+                status.innerHTML = `<div class="status-text" id="status-text"> ${data["status"]}</div>  <div class="bars-1"></div>`;
+            } else {
+            var songList = document.getElementById("song-list");
+            songList.insertAdjacentHTML("beforeend", `<p class="song"> ${data["message"]} </p>`);
+            songList.scrollTop = songList.scrollHeight;
+            }
+        }
+    }
+
+    function uuidv4() {
+        return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
+            (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
+        );
+    }   
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+  
+    if(getCookie("accessToken")!=null){
+        
+        axios.get('https://api.spotify.com/v1/me', {headers: { "Authorization": `Bearer ${getCookie("accessToken")}` }})
+        .then(function (response) {
+            container.innerHTML = 
+            `
+                <div id="search">
+                <form id="search-form" onsubmit="return false;">
+                    <input type="url" id="url" style="font-family: FontAwesome, Helvetica; font-size: 1.1rem " placeholder="Paste &#xf281; Reddit Post URL">
+                    <div class="location">
+                    <datalist name="Locations" id="locations">
+                        <option value="AD">Andorra</option>
+                        <option value="AE">United Arab Emirates</option>
+                        <option value="AG">Antigua and Barbuda</option>
+                        <option value="AL">Albania</option>
+                        <option value="AM">Armenia</option>
+                        <option value="AO">Angola</option>
+                        <option value="AR">Argentina</option>
+                        <option value="AT">Austria</option>
+                        <option value="AU">Australia</option>
+                        <option value="AZ">Azerbaijan</option>
+                        <option value="BA">Bosnia and Herzegovina</option>
+                        <option value="BB">Barbados</option>
+                        <option value="BD">Bangladesh</option>
+                        <option value="BE">Belgium</option>
+                        <option value="BF">Burkina Faso</option>
+                        <option value="BG">Bulgaria</option>
+                        <option value="BH">Bahrain</option>
+                        <option value="BI">Burundi</option>
+                        <option value="BJ">Benin</option>
+                        <option value="BN">Brunei Darussalam</option>
+                        <option value="BO">Bolivia, Plurinational State of</option>
+                        <option value="BR">Brazil</option>
+                        <option value="BS">Bahamas</option>
+                        <option value="BT">Bhutan</option>
+                        <option value="BW">Botswana</option>
+                        <option value="BY">Belarus</option>
+                        <option value="BZ">Belize</option>
+                        <option value="CA">Canada</option>
+                        <option value="CD">Congo, The Democratic Republic of the</option>
+                        <option value="CG">Congo</option>
+                        <option value="CH">Switzerland</option>
+                        <option value="CI">Côte d'Ivoire</option>
+                        <option value="CL">Chile</option>
+                        <option value="CM">Cameroon</option>
+                        <option value="CO">Colombia</option>
+                        <option value="CR">Costa Rica</option>
+                        <option value="CV">Cabo Verde</option>
+                        <option value="CW">Curaçao</option>
+                        <option value="CY">Cyprus</option>
+                        <option value="CZ">Czechia</option>
+                        <option value="DE">Germany</option>
+                        <option value="DJ">Djibouti</option>
+                        <option value="DK">Denmark</option>
+                        <option value="DM">Dominica</option>
+                        <option value="DO">Dominican Republic</option>
+                        <option value="DZ">Algeria</option>
+                        <option value="EC">Ecuador</option>
+                        <option value="EE">Estonia</option>
+                        <option value="EG">Egypt</option>
+                        <option value="ES">Spain</option>
+                        <option value="ET">Ethiopia</option>
+                        <option value="FI">Finland</option>
+                        <option value="FJ">Fiji</option>
+                        <option value="FM">Micronesia, Federated States of</option>
+                        <option value="FR">France</option>
+                        <option value="GA">Gabon</option>
+                        <option value="GB">United Kingdom</option>
+                        <option value="GD">Grenada</option>
+                        <option value="GE">Georgia</option>
+                        <option value="GH">Ghana</option>
+                        <option value="GM">Gambia</option>
+                        <option value="GN">Guinea</option>
+                        <option value="GQ">Equatorial Guinea</option>
+                        <option value="GR">Greece</option>
+                        <option value="GT">Guatemala</option>
+                        <option value="GW">Guinea-Bissau</option>
+                        <option value="GY">Guyana</option>
+                        <option value="HK">Hong Kong</option>
+                        <option value="HN">Honduras</option>
+                        <option value="HR">Croatia</option>
+                        <option value="HT">Haiti</option>
+                        <option value="HU">Hungary</option>
+                        <option value="ID">Indonesia</option>
+                        <option value="IE">Ireland</option>
+                        <option value="IL">Israel</option>
+                        <option value="IN">India</option>
+                        <option value="IQ">Iraq</option>
+                        <option value="IS">Iceland</option>
+                        <option value="IT">Italy</option>
+                        <option value="JM">Jamaica</option>
+                        <option value="JO">Jordan</option>
+                        <option value="JP">Japan</option>
+                        <option value="KE">Kenya</option>
+                        <option value="KG">Kyrgyzstan</option>
+                        <option value="KH">Cambodia</option>
+                        <option value="KI">Kiribati</option>
+                        <option value="KM">Comoros</option>
+                        <option value="KN">Saint Kitts and Nevis</option>
+                        <option value="KR">Korea, Republic of</option>
+                        <option value="KW">Kuwait</option>
+                        <option value="KZ">Kazakhstan</option>
+                        <option value="LA">Lao People's Democratic Republic</option>
+                        <option value="LB">Lebanon</option>
+                        <option value="LC">Saint Lucia</option>
+                        <option value="LI">Liechtenstein</option>
+                        <option value="LK">Sri Lanka</option>
+                        <option value="LR">Liberia</option>
+                        <option value="LS">Lesotho</option>
+                        <option value="LT">Lithuania</option>
+                        <option value="LU">Luxembourg</option>
+                        <option value="LV">Latvia</option>
+                        <option value="LY">Libya</option>
+                        <option value="MA">Morocco</option>
+                        <option value="MC">Monaco</option>
+                        <option value="MD">Moldova, Republic of</option>
+                        <option value="ME">Montenegro</option>
+                        <option value="MG">Madagascar</option>
+                        <option value="MH">Marshall Islands</option>
+                        <option value="MK">North Macedonia</option>
+                        <option value="ML">Mali</option>
+                        <option value="MN">Mongolia</option>
+                        <option value="MO">Macao</option>
+                        <option value="MR">Mauritania</option>
+                        <option value="MT">Malta</option>
+                        <option value="MU">Mauritius</option>
+                        <option value="MV">Maldives</option>
+                        <option value="MW">Malawi</option>
+                        <option value="MX">Mexico</option>
+                        <option value="MY">Malaysia</option>
+                        <option value="MZ">Mozambique</option>
+                        <option value="NA">Namibia</option>
+                        <option value="NE">Niger</option>
+                        <option value="NG">Nigeria</option>
+                        <option value="NI">Nicaragua</option>
+                        <option value="NL">Netherlands</option>
+                        <option value="NO">Norway</option>
+                        <option value="NP">Nepal</option>
+                        <option value="NR">Nauru</option>
+                        <option value="NZ">New Zealand</option>
+                        <option value="OM">Oman</option>
+                        <option value="PA">Panama</option>
+                        <option value="PE">Peru</option>
+                        <option value="PG">Papua New Guinea</option>
+                        <option value="PH">Philippines</option>
+                        <option value="PK">Pakistan</option>
+                        <option value="PL">Poland</option>
+                        <option value="PR">Puerto Rico</option>
+                        <option value="PS">Palestine, State of</option>
+                        <option value="PT">Portugal</option>
+                        <option value="PW">Palau</option>
+                        <option value="PY">Paraguay</option>
+                        <option value="QA">Qatar</option>
+                        <option value="RO">Romania</option>
+                        <option value="RS">Serbia</option>
+                        <option value="RW">Rwanda</option>
+                        <option value="SA">Saudi Arabia</option>
+                        <option value="SB">Solomon Islands</option>
+                        <option value="SC">Seychelles</option>
+                        <option value="SE">Sweden</option>
+                        <option value="SG">Singapore</option>
+                        <option value="SI">Slovenia</option>
+                        <option value="SK">Slovakia</option>
+                        <option value="SL">Sierra Leone</option>
+                        <option value="SM">San Marino</option>
+                        <option value="SN">Senegal</option>
+                        <option value="SR">Suriname</option>
+                        <option value="ST">Sao Tome and Principe</option>
+                        <option value="SV">El Salvador</option>
+                        <option value="SZ">Eswatini</option>
+                        <option value="TD">Chad</option>
+                        <option value="TG">Togo</option>
+                        <option value="TH">Thailand</option>
+                        <option value="TJ">Tajikistan</option>
+                        <option value="TL">Timor-Leste</option>
+                        <option value="TN">Tunisia</option>
+                        <option value="TO">Tonga</option>
+                        <option value="TR">Türkiye</option>
+                        <option value="TT">Trinidad and Tobago</option>
+                        <option value="TV">Tuvalu</option>
+                        <option value="TW">Taiwan, Province of China</option>
+                        <option value="TZ">Tanzania, United Republic of</option>
+                        <option value="UA">Ukraine</option>
+                        <option value="UG">Uganda</option>
+                        <option value="US">United States</option>
+                        <option value="UY">Uruguay</option>
+                        <option value="UZ">Uzbekistan</option>
+                        <option value="VC">Saint Vincent and the Grenadines</option>
+                        <option value="VE">Venezuela, Bolivarian Republic of</option>
+                        <option value="VN">Viet Nam</option>
+                        <option value="VU">Vanuatu</option>
+                        <option value="WS">Samoa</option>
+                        <option value="XK">Kosovo</option>
+                        <option value="ZA">South Africa</option>
+                        <option value="ZM">Zambia</option>
+                        <option value="ZW">Zimbabwe</option>                             
+                    </datalist>
+                    <input id="location-selector" autoComplete="on" list="locations" placeholder="Country">
+                    </div>
+                <button class="search-btn" id="search-btn" onclick="search();">Find <i class="fa fa-spotify"></i> Songs</button>
+                </form>
+                </div>
+                <div id="status"></div>
+            `
+            document.getElementById('location-selector').value = 'US';
+        })
+        .catch(function (error) {
+            refreshToken();
+        });
+        
+
+    }else{
+        container.innerHTML = `
+        <div>
+                <a class="login" href="/login"><button class="btn">Login with <i class="fa fa-spotify"></i> Spotify</button></a>
+            </div>      `
+    }
+
+   
+
+</script>
