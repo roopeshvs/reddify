@@ -88,10 +88,6 @@ async def create_reddit_client():
         user_agent=os.environ.get("REDDIT_USERAGENT")
     )
 
-
-reddit = create_reddit_client()
-
-
 def generate_random_string(string_length):
     possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
     text = "".join(
@@ -219,6 +215,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: uuid.UUID):
             url = await websocket.receive_text()
             market = await websocket.receive_text()
             url = re.sub(r"\?utm_source=.*", "", url)
+            reddit = await create_reddit_client()
             reddit_submission = await reddit.submission(url=url)
             message = {
                 "status": f"Fetching messages from Reddit Post..."
