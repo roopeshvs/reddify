@@ -11,20 +11,22 @@ import emoji
 import logging
 import httpx
 import uvicorn
+import asyncio
 from urllib.parse import urlencode
 from typing import List
 from fastapi import FastAPI, Response, Request, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.responses import RedirectResponse, HTMLResponse
+from fastapi.responses import RedirectResponse, HTMLResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
+from asyncprawcore.exceptions import TooManyRequests, NotFound, ServerError
 
-logging.basicConfig(level=logging.INFO, format="%(levelname)-9s %(asctime)s - %(name)s - %(message)s")
+logging.basicConfig(level=logging.WARN, format="%(levelname)-9s %(asctime)s - %(name)s - %(message)s")
 LOGGER = logging.getLogger(__name__)
 
 load_dotenv()
 
 class HTTPXClientWrapper:
-
+    """ Singleton wrapper for the HTTPX AsyncClient."""
     async_client = None
 
     def start(self):
@@ -42,12 +44,30 @@ class HTTPXClientWrapper:
 
     def __call__(self):
         """ Calling the instantiated HTTPXClientWrapper returns the wrapped singleton."""
-        # Ensure we don't use it if not started / running
         assert self.async_client is not None
-        # LOGGER.info(f'httpx async_client.is_closed(): {self.async_client.is_closed}. Id (will be unchanged): {id(self.async_client)}')
+        LOGGER.debug(f'httpx async_client.is_closed(): {self.async_client.is_closed}. Id (will be unchanged): {id(self.async_client)}')
         return self.async_client
 
+class WebsocketConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def send_message(self, message: str, websocket: WebSocket):
+        await websocket.send_text(message)
+
+    async def broadcast(self, message: str):
+        for connection in self.active_connections:
+            await connection.send_text(message)
+
 httpx_client_wrapper = HTTPXClientWrapper()
+ws_manager = WebsocketConnectionManager()
 app = FastAPI()
 templates = Jinja2Templates(directory="./templates")
 
@@ -63,13 +83,14 @@ MAX_RETRIES = 5
 async def startup_event():
     httpx_client_wrapper.start()
 
-
 @app.on_event("shutdown")
 async def shutdown_event():
     await httpx_client_wrapper.stop()
 
 @app.get('/external')
 async def call_external_api(url, method='GET', websocket=None, params=None, json=None):
+    """ Calls spotify API with access token. 
+        Refreshes token if 401 and tries again."""
     async_client = httpx_client_wrapper()
     access_token = websocket.cookies.get("accessToken")
     headers = {
@@ -78,10 +99,40 @@ async def call_external_api(url, method='GET', websocket=None, params=None, json
     if method == 'GET':
         response = await async_client.get(url, headers=headers, params=params)
     elif method == 'POST':
-        response = await async_client.post(url, headers=headers, json=json)
+        headers_1 = {
+        'Authorization': 'Bearer ' + access_token + "123"
+    }
+        response = await async_client.post(url, headers=headers_1, json=json)
+    if response.status_code == 401:
+        LOGGER.info(f"Access token expired. Refreshing token...")
+        refresh_token = websocket.cookies.get("refreshToken")
+        request_string = CLIENT_ID + ":" + CLIENT_SECRET
+        encoded_bytes = base64.b64encode(request_string.encode("utf-8"))
+        encoded_string = str(encoded_bytes, "utf-8")
+        header = {"Authorization": "Basic " + encoded_string}
+        form_data = {"grant_type": "refresh_token", "refresh_token": refresh_token}
+        refresh_token_url = "https://accounts.spotify.com/api/token"
+        api_response = requests.post(refresh_token_url, data=form_data, headers=header)
+        print(api_response.json(), api_response.status_code)
+        if api_response.status_code == 200:
+            LOGGER.info(f"Token refreshed successfully.")
+            data = api_response.json()
+            access_token = data["access_token"]
+            response = RedirectResponse(url=URI)
+            if data.get("refesh_token") is not None:
+                refresh_token = data["refresh_token"]
+            websocket.cookies["accessToken"] = access_token
+            headers = {
+                'Authorization': 'Bearer ' + access_token
+            }
+            if method == 'GET':
+                response = await async_client.get(url, headers=headers, params=params)
+            elif method == 'POST':
+                response = await async_client.post(url, headers=headers, json=json)
     return response
 
 async def create_reddit_client():
+    LOGGER.debug("Creating Async Reddit client...")
     return praw.Reddit(
         client_id=os.environ.get("REDDIT_CLIENT_ID"),
         client_secret=os.environ.get("REDDIT_CLIENT_SECRET"),
@@ -130,7 +181,6 @@ def callback(request: Request, response: Response):
     if state == None or state != stored_state:
         raise HTTPException(status_code=400, detail="State mismatch")
     else:
-
         response.delete_cookie(STATE_KEY, path="/", domain=None)
 
         url = "https://accounts.spotify.com/api/token"
@@ -161,9 +211,11 @@ def callback(request: Request, response: Response):
 
 @app.get("/", response_class=HTMLResponse)
 def main(request: Request):
-
     return templates.TemplateResponse("index.html", {"request": request})
 
+@app.get('/favicon.ico', include_in_schema=False)
+async def favicon():
+    return FileResponse("templates/favicon.ico")
 
 @app.get("/refresh_token")
 def refresh_token(request: Request):
@@ -186,54 +238,61 @@ def refresh_token(request: Request):
         access_token = data["access_token"]
 
         return {"access_token": access_token}
-    
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: List[WebSocket] = []
-
-    async def connect(self, websocket: WebSocket):
-        await websocket.accept()
-        self.active_connections.append(websocket)
-
-    def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
-
-    async def send_personal_message(self, message: str, websocket: WebSocket):
-        await websocket.send_text(message)
-
-    async def broadcast(self, message: str):
-        for connection in self.active_connections:
-            await connection.send_text(message)
-    
-manager = ConnectionManager()
 
 @app.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: uuid.UUID):
-    await manager.connect(websocket)
+    await ws_manager.connect(websocket)
     try:
         while True:
             url = await websocket.receive_text()
             market = await websocket.receive_text()
             url = re.sub(r"\?utm_source=.*", "", url)
             reddit = await create_reddit_client()
-            reddit_submission = await reddit.submission(url=url)
+            try:
+                reddit_submission = await reddit.submission(url=url)
+            except (NotFound, ServerError):
+                message = {
+                    "status": f"Invalid URL. Please enter a valid Reddit Post URL."
+                }
+                await ws_manager.send_message(json.dumps(message), websocket)
+                await websocket.close(code=1000)
+                return
             message = {
                 "status": f"Fetching messages from Reddit Post..."
             }
-            await manager.send_personal_message(json.dumps(message), websocket)
+            await ws_manager.send_message(json.dumps(message), websocket)
             comments = await reddit_submission.comments()
-            await comments.replace_more(limit=None)
-            for comment in comments:
-                # time.sleep(0.1)
+            for i in range(1, MAX_RETRIES+1):
+                try:
+                    await comments.replace_more(limit=None)
+                    break
+                except TooManyRequests as e:
+                    LOGGER.warn(f"{client_id} - Error: {e}. Reddit API rate limit exceeded. Waiting for {i*2} minutes before trying again...")
+                    message = {
+                        "status": f"Reddit API rate limit exceeded. Waiting for {i*2} minutes before trying again..."
+                    }
+                    await ws_manager.send_message(json.dumps(message), websocket)
+                    await asyncio.sleep(i*2*60)
+                    message = {
+                        "status": f"Fetching messages from Reddit Post..."
+                    }
+                    await ws_manager.send_message(json.dumps(message), websocket)
+                    continue
+                except Exception as e:
+                    LOGGER.error(f"{client_id} - Error: {e}. Retrying...")
+                    continue
+            else:
+                LOGGER.error(f"{client_id} - Max retries exceeded. Giving up...")
                 message = {
-                    "message": f"{comment.body}"
+                        "status": f"Coudn't fetch messages from Reddit Post at the moment. Please try again later."
                 }
-                await manager.send_personal_message(json.dumps(message), websocket)
-            
+                await ws_manager.send_message(json.dumps(message), websocket)
+                await websocket.close(code=1000)
+                return
             message = {
                 "status": f"Creating Spotify Playlist..."
             }
-            await manager.send_personal_message(json.dumps(message), websocket)
+            await ws_manager.send_message(json.dumps(message), websocket)
             playlist_name = reddit_submission.title
             
             access_token = websocket.cookies.get("accessToken")
@@ -254,19 +313,25 @@ async def websocket_endpoint(websocket: WebSocket, client_id: uuid.UUID):
                 "description": f"Playlist created from Reddit post: {url}"
             }
             playlists_response = await call_external_api(playlists_url, method='POST', websocket=websocket, json=data)
-            print(playlists_response.json())
+            LOGGER.info(playlists_response.json())
             playlist_id = playlists_response.json()["id"]
             playlist_url = playlists_response.json()["external_urls"]["spotify"]
             message = {
                 "status": f"Playlist created. Finding songs..."
             }
-            await manager.send_personal_message(json.dumps(message), websocket)
+            await ws_manager.send_message(json.dumps(message), websocket)
 
             track_uris = []
             filtered_lines = []
             all_comments = await reddit_submission.comments()
             for comment in all_comments:
-                if comment.author is not None and comment.author.name != "AutoModerator" and comment.author.name != "Reddit":
+                """
+                Skips AutoModerator and Reddit comments.
+                Skips comments that contains images as the text accompanying the image usually doesn't contain song names.
+                Removes all URLs from the comment at the moment. Should be improved to get the song name from spotify links at least. 
+                Removes all emojis.
+                """
+                if comment.author is not None and comment.author.name != "AutoModerator" and comment.author.name != "Reddit" and "i.redd.it" not in comment.body:
                     lines = comment.body.splitlines()
                     for line in lines:
                         line = re.sub(r"http\S+", "", line)
@@ -276,7 +341,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: uuid.UUID):
             for line in filtered_lines:
                 search_url = "https://api.spotify.com/v1/search"
                 search_params = {
-                    "q": line[:100],
+                    "q": line[:100], # Spotify API allows only 100 characters in the query.
                     "type": "track",
                     "limit": 1,
                     "market": market if market else "US"
@@ -284,13 +349,12 @@ async def websocket_endpoint(websocket: WebSocket, client_id: uuid.UUID):
                 for _ in range(MAX_RETRIES):
                     try:
                         search_response = await call_external_api(search_url, method='GET', websocket=websocket, params=search_params)
-                        print(search_response)
                     except (httpx._exceptions.ConnectError, httpx._exceptions.ReadTimeout) as e:
-                        logging.error(f"Error: {e}. Retrying...")
+                        LOGGER.error(f"{client_id} - Error: {e}. Retrying...")
                         continue
                     break
                 else:
-                    logging.error("Max retries exceeded. Skipping...")
+                    LOGGER.error(f"{client_id} - Max retries exceeded. Skipping...")
                     continue
                 search_response = search_response.json()
                 if search_response.get("tracks") is not None and search_response["tracks"]["items"]:
@@ -301,17 +365,21 @@ async def websocket_endpoint(websocket: WebSocket, client_id: uuid.UUID):
                     message = {
                         "message": f"{track_name} by {artist_name}"
                     }
-                    await manager.send_personal_message(json.dumps(message), websocket)
+                    await ws_manager.send_message(json.dumps(message), websocket)
                 else:
-                    logging.error(f"Could not find track for comment: {comment.body}")
+                    LOGGER.error(f"{client_id} - Could not find track for comment: {line[:100]}")
             
             message = {
                 "status": f"Adding songs to playlist..."
             }
-            await manager.send_personal_message(json.dumps(message), websocket)
+            await ws_manager.send_message(json.dumps(message), websocket)
             track_uris = list(set(track_uris))
             add_tracks_url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
             for i in range(0, min(len(track_uris), 10000), 100):
+                """
+                Spotify API allows adding 100 tracks at a time.
+                Spotify API allows adding 10,000 tracks to a playlist.
+                """
                 data = {
                     "uris": track_uris[i:i+100]
                 }
@@ -319,21 +387,21 @@ async def websocket_endpoint(websocket: WebSocket, client_id: uuid.UUID):
                     try:
                         await call_external_api(add_tracks_url, method='POST', websocket=websocket, json=data)
                     except (httpx._exceptions.ConnectError, httpx._exceptions.ReadTimeout) as e:
-                        logging.error(f"Error: {e}. Retrying...")
+                        LOGGER.error(f"{client_id} - Error: {e}. Retrying...")
                         continue
                     break
                 else:
-                    logging.error("Max retries exceeded when adding tracks to playlist. Skipping...")
+                    LOGGER.error(f"{client_id} - Max retries exceeded when adding tracks to playlist. Skipping...")
                     continue
 
             message = {
                 "status": f"Hooray! {display_name}, Your Playlist is ready!",
                 "playlist_url": f"{playlist_url}"
             }
-            await manager.send_personal_message(json.dumps(message), websocket)
+            await ws_manager.send_message(json.dumps(message), websocket)
 
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
+        ws_manager.disconnect(websocket)
 
 if __name__ == '__main__':
     LOGGER.info(f'starting...')

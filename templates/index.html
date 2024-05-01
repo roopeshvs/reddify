@@ -265,7 +265,12 @@ input[type="url"]{
 </style>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script>
-
+    // if local, use http://localhost:8000
+    // if production, use https://reddify.pesh.dev
+    // find if local or production
+    var url = window.location.href;
+    var isLocal = url.includes("localhost");
+    var wsUrl = isLocal ? "ws://localhost:8091/ws/" : "wss://reddify.pesh.dev/ws/";
 
     var container = document.getElementById("container");
     
@@ -281,10 +286,6 @@ input[type="url"]{
             container.innerHTML = `Error`
         });
     }
-
-    setInterval(function() {
-        refreshToken();
-    }, 5 * 60 * 1000);
 
     function search(){
         var url = document.getElementById("url").value;
@@ -325,20 +326,30 @@ input[type="url"]{
             document.getElementById("search-btn").disabled = false;
             return;
         }
-        var ws = new WebSocket("wss://reddify.pesh.dev/ws/"+ uuidv4());
+        var ws = new WebSocket(wsUrl + uuidv4());
         ws.onopen = function(){
             ws.send(url);
             ws.send(location);
+        }
+        ws.onclose = function(){
+            if (event.code != 1000){
+                console.log("CODE:", event.code)
+                console.log("Connection closed due to an error.");
+                status.innerHTML = `<div class="status-text" id="status-text"> Connection closed unexpectedly due to a server error. Please try again later.</div> `
+            }
+            document.getElementById("search-btn").disabled = false;
         }
         container.insertAdjacentHTML("beforeend", `<div id="song-list"></div>`);
         ws.onmessage = function(event){
             console.log(event.data);
             var data = JSON.parse(event.data);
-            if(data.hasOwnProperty('status') && data["status"].startsWith("Hooray")){
+            if(data.hasOwnProperty('status') && (data["status"].startsWith("Hooray") || data["status"].startsWith("Invalid"))){
                 document.getElementById("search-btn").disabled = false;
                 status.innerHTML = `<div class="status-text" id="status-text"> ${data["status"]}</div>`
-                container.insertAdjacentHTML("beforeend", `<div class = "playlist-container" id="playlist-container"><button class="playlist-btn" onclick="window.open('${data["playlist_url"]}', '_blank')">Open <i class="fa fa-spotify"></i> Playlist</button></div>`)
-            } else if (data.hasOwnProperty('status')){
+                if(data.hasOwnProperty('playlist_url')){
+                    container.insertAdjacentHTML("beforeend", `<div class = "playlist-container" id="playlist-container"><button class="playlist-btn" onclick="window.open('${data["playlist_url"]}', '_blank')">Open <i class="fa fa-spotify"></i> Playlist</button></div>`)
+                }
+                } else if (data.hasOwnProperty('status')){
                 status.innerHTML = `<div class="status-text" id="status-text"> ${data["status"]}</div>  <div class="bars-1"></div>`;
             } else {
             var songList = document.getElementById("song-list");
