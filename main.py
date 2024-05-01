@@ -81,7 +81,7 @@ async def call_external_api(url, method='GET', websocket=None, params=None, json
         response = await async_client.post(url, headers=headers, json=json)
     return response
 
-def create_reddit_client():
+async def create_reddit_client():
     return praw.Reddit(
         client_id=os.environ.get("REDDIT_CLIENT_ID"),
         client_secret=os.environ.get("REDDIT_CLIENT_SECRET"),

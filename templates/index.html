@@ -325,7 +325,7 @@ input[type="url"]{
             document.getElementById("search-btn").disabled = false;
             return;
         }
-        var ws = new WebSocket("ws://localhost:8091/ws/"+ uuidv4());
+        var ws = new WebSocket("wss://reddify.pesh.dev/ws/"+ uuidv4());
         ws.onopen = function(){
             ws.send(url);
             ws.send(location);
