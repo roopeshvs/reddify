@@ -221,8 +221,9 @@ async def websocket_endpoint(websocket: WebSocket, client_id: uuid.UUID):
                 "status": f"Fetching messages from Reddit Post..."
             }
             await manager.send_personal_message(json.dumps(message), websocket)
-            await reddit_submission.comments.replace_more(limit=None)
-            for comment in reddit_submission.comments:
+            comments = await reddit_submission.comments()
+            await comments.replace_more(limit=None)
+            for comment in comments:
                 # time.sleep(0.1)
                 message = {
                     "message": f"{comment.body}"
