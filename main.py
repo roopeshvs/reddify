@@ -244,8 +244,15 @@ async def websocket_endpoint(websocket: WebSocket, client_id: uuid.UUID):
     await ws_manager.connect(websocket)
     try:
         while True:
-            url = await websocket.receive_text()
-            market = await websocket.receive_text()
+            data = await websocket.receive_text()
+            data = json.loads(data)
+            url = data["url"]
+            market = data.get("location")
+            playlist_type = data.get("type")
+            message = {
+                "status": f"Fetching messages from Reddit Post..."
+            }
+            await ws_manager.send_message(json.dumps(message), websocket)
             url = re.sub(r"\?utm_source=.*", "", url)
             reddit = await create_reddit_client()
             try:
@@ -257,10 +264,6 @@ async def websocket_endpoint(websocket: WebSocket, client_id: uuid.UUID):
                 await ws_manager.send_message(json.dumps(message), websocket)
                 await websocket.close(code=1000)
                 return
-            message = {
-                "status": f"Fetching messages from Reddit Post..."
-            }
-            await ws_manager.send_message(json.dumps(message), websocket)
             comments = await reddit_submission.comments()
             for i in range(1, MAX_RETRIES+1):
                 try:
@@ -310,7 +313,8 @@ async def websocket_endpoint(websocket: WebSocket, client_id: uuid.UUID):
             playlists_url = f"https://api.spotify.com/v1/users/{user_id}/playlists"
             data = {
                 "name": playlist_name,
-                "description": f"Playlist created from Reddit post: {url}"
+                "description": f"Playlist created from Reddit post: {url}",
+                "public": "false" if playlist_type == "private" else "true"
             }
             playlists_response = await call_external_api(playlists_url, method='POST', websocket=websocket, json=data)
             LOGGER.info(playlists_response.json())
