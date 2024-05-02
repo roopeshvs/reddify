@@ -32,13 +32,13 @@ Create a new file called `.env` in the root directory of the project and add the
 ```bash
 SPOTIPY_CLIENT_ID=spotify-client-id
 SPOTIPY_CLIENT_SECRET=spotify-client-secret
-SPOTIPY_REDIRECT_URI=http://localhost:8091
+APPLICATION_URI=http://localhost:8091
 REDDIT_CLIENT_ID=reddit-client-id
 REDDIT_CLIENT_SECRET=reddit-client-secret
 REDDIT_USER_AGENT=reddify.v1 by /u/your-reddit-username
 ```
 
-Replace the above placeholders with your actual client ID, client secret, and Reddit username. Make sure to add the value for `SPOTIPY_REDIRECT_URI` in your Spotify application settings as well. 
+Replace the above placeholders with your actual client ID, client secret, and Reddit username. Make sure to add the value for `APPLICATION_URI` in your Spotify application settings as well. 
 
 ## Usage
 
