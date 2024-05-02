@@ -113,7 +113,6 @@ async def call_external_api(url, method='GET', websocket=None, params=None, json
         form_data = {"grant_type": "refresh_token", "refresh_token": refresh_token}
         refresh_token_url = "https://accounts.spotify.com/api/token"
         api_response = requests.post(refresh_token_url, data=form_data, headers=header)
-        print(api_response.json(), api_response.status_code)
         if api_response.status_code == 200:
             LOGGER.info(f"Token refreshed successfully.")
             data = api_response.json()
@@ -246,7 +245,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: uuid.UUID):
         while True:
             data = await websocket.receive_text()
             data = json.loads(data)
-            url = data["url"]
+            url = data.get("url")
             market = data.get("location")
             playlist_type = data.get("type")
             message = {
@@ -314,7 +313,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: uuid.UUID):
             data = {
                 "name": playlist_name,
                 "description": f"Playlist created from Reddit post: {url}",
-                "public": "false" if playlist_type == "private" else "true"
+                "public": False if playlist_type == "private" else True
             }
             playlists_response = await call_external_api(playlists_url, method='POST', websocket=websocket, json=data)
             LOGGER.info(playlists_response.json())
@@ -377,7 +376,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: uuid.UUID):
                 "status": f"Adding songs to playlist..."
             }
             await ws_manager.send_message(json.dumps(message), websocket)
-            track_uris = list(set(track_uris))
+            track_uris = list(dict.fromkeys(track_uris))
             add_tracks_url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks"
             for i in range(0, min(len(track_uris), 10000), 100):
                 """

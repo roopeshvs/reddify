@@ -134,6 +134,7 @@ animation: b1 1s infinite linear;
             console.log(event.data);
             var data = JSON.parse(event.data);
             if(data.hasOwnProperty('status') && (data["status"].startsWith("Hooray") || data["status"].startsWith("Invalid"))){
+                document.getElementById("url").value = "";
                 document.getElementById("search-btn").disabled = false;
                 status.innerHTML = `<div class="status-text" id="status-text"> ${data["status"]}</div>`
                 if(data.hasOwnProperty('playlist_url')){
@@ -407,7 +408,7 @@ animation: b1 1s infinite linear;
                     </div>
                     <div class="row p-2">
                         <div class="col-4 offset-4">
-                            <button class="btn btn-dark" id="search-btn" style="font-family: FontAwesome, Helvetica;" onclick="search();">Create <i class="fa fa-spotify"></i> Playlist</button>
+                            <button class="btn btn-dark" id="search-btn" style="font-family: FontAwesome, Helvetica;" onclick="search(); return false;">Create <i class="fa fa-spotify"></i> Playlist</button>
                         </div>
                     </div>
                 </form>
@@ -425,8 +426,6 @@ animation: b1 1s infinite linear;
         .catch(function (error) {
             refreshToken();
         });
-        
-
     }else{
         container.innerHTML = `
         <div class="container d-flex align-items-center justify-content-center vh-100">
