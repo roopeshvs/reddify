@@ -249,7 +249,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: uuid.UUID):
             market = data.get("location")
             playlist_type = data.get("type")
             message = {
-                "status": f"Fetching messages from Reddit Post..."
+                "status": f"Fetching comments from Reddit Post..."
             }
             await ws_manager.send_message(json.dumps(message), websocket)
             url = re.sub(r"\?utm_source=.*", "", url)
@@ -263,6 +263,8 @@ async def websocket_endpoint(websocket: WebSocket, client_id: uuid.UUID):
                 await ws_manager.send_message(json.dumps(message), websocket)
                 await websocket.close(code=1000)
                 return
+            
+            reddit_submission.comment_sort = "best"
             comments = await reddit_submission.comments()
             for i in range(1, MAX_RETRIES+1):
                 try:
@@ -276,7 +278,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: uuid.UUID):
                     await ws_manager.send_message(json.dumps(message), websocket)
                     await asyncio.sleep(i*2*60)
                     message = {
-                        "status": f"Fetching messages from Reddit Post..."
+                        "status": f"Fetching comments from Reddit Post..."
                     }
                     await ws_manager.send_message(json.dumps(message), websocket)
                     continue
@@ -286,7 +288,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: uuid.UUID):
             else:
                 LOGGER.error(f"{client_id} - Max retries exceeded. Giving up...")
                 message = {
-                        "status": f"Coudn't fetch messages from Reddit Post at the moment. Please try again later."
+                        "status": f"Coudn't fetch comments from Reddit Post at the moment. Please try again later."
                 }
                 await ws_manager.send_message(json.dumps(message), websocket)
                 await websocket.close(code=1000)
