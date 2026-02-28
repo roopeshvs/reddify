@@ -1,0 +1,15 @@
+services:
+  reddify:
+    build: .
+    ports:
+      - "8091:8091"
+    environment:
+      - SPOTIFY_CLIENT_ID
+      - SPOTIFY_CLIENT_SECRET
+      - APPLICATION_URI
+      - REDDIT_CLIENT_ID
+      - REDDIT_CLIENT_SECRET
+      - REDDIT_USERAGENT
+    env_file:
+      - .env
+    restart: unless-stopped
