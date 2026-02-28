@@ -276,10 +276,9 @@ async def stream_endpoint(request: Request):
                 LOGGER.error(f"{client_id} - Spotify /me failed ({me_response.status_code}): {me_response.text}")
                 yield sse_encode({"status": "Spotify authentication failed. Please log in again."})
                 return
-            user_id = me_response.json()["id"]
             display_name = me_response.json()["display_name"]
 
-            playlists_url = f"https://api.spotify.com/v1/users/{user_id}/playlists"
+            playlists_url = "https://api.spotify.com/v1/me/playlists"
             data = {
                 "name": playlist_name,
                 "description": f"Playlist created from Reddit post: {cleaned_url}",
@@ -287,6 +286,10 @@ async def stream_endpoint(request: Request):
             }
             playlists_response = await call_external_api(playlists_url, method='POST', token_store=token_store, json_data=data)
             LOGGER.info(playlists_response.json())
+            if playlists_response.status_code != 201:
+                LOGGER.error(f"{client_id} - Spotify playlist creation failed ({playlists_response.status_code}): {playlists_response.text}")
+                yield sse_encode({"status": "Failed to create Spotify playlist. Please try again."})
+                return
             playlist_id = playlists_response.json()["id"]
             playlist_url = playlists_response.json()["external_urls"]["spotify"]
 
@@ -294,15 +297,18 @@ async def stream_endpoint(request: Request):
 
             track_uris = []
             filtered_lines = []
-            all_comments = await reddit_submission.comments()
-            for comment in all_comments:
-                if comment.author is not None and comment.author.name != "AutoModerator" and comment.author.name != "Reddit" and "i.redd.it" not in comment.body:
-                    lines = comment.body.splitlines()
-                    for line in lines:
-                        line = re.sub(r"http\S+", "", line)
-                        line = emoji.replace_emoji(line, replace='')
-                        if line is not None and line != "" and line != "[" and not line.isspace():
-                            filtered_lines.append(line)
+            for comment in comments:
+                try:
+                    if comment.author is not None and comment.author.name != "AutoModerator" and comment.author.name != "Reddit" and "i.redd.it" not in comment.body:
+                        lines = comment.body.splitlines()
+                        for line in lines:
+                            line = re.sub(r"http\S+", "", line)
+                            line = emoji.replace_emoji(line, replace='')
+                            if line is not None and line != "" and line != "[" and not line.isspace():
+                                filtered_lines.append(line)
+                except Exception as e:
+                    LOGGER.warning(f"{client_id} - Skipping comment due to error: {e}")
+                    continue
 
             for line in filtered_lines:
                 search_url = "https://api.spotify.com/v1/search"
