@@ -272,6 +272,10 @@ async def stream_endpoint(request: Request):
 
             me_url = "https://api.spotify.com/v1/me"
             me_response = await call_external_api(me_url, method='GET', token_store=token_store)
+            if me_response.status_code != 200:
+                LOGGER.error(f"{client_id} - Spotify /me failed ({me_response.status_code}): {me_response.text}")
+                yield sse_encode({"status": "Spotify authentication failed. Please log in again."})
+                return
             user_id = me_response.json()["id"]
             display_name = me_response.json()["display_name"]
 
