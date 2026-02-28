@@ -9,7 +9,7 @@
     </head>
     <body class="bg-light bg-gradient text-black">
         <div id="container">
-        </div> 
+        </div>
     </body>
 </html>
 <style>
@@ -29,7 +29,7 @@ html, body {
 width: 1.8rem;
 aspect-ratio: 1;
 --c: no-repeat linear-gradient(black 0 0);
-background: 
+background:
     var(--c) 0%   50%,
     var(--c) 50%  50%,
     var(--c) 100% 50%;
@@ -65,10 +65,10 @@ animation: b1 1s infinite linear;
     var url = window.location.href;
     var port = window.location.port;
     var isLocal = url.includes("localhost");
-    var wsUrl = isLocal ? "ws://localhost:" + port + "/ws/" : "wss://reddify.pesh.dev/ws/";
+    var wsUrl = isLocal ? "ws://localhost:" + port + "/ws/" : "wss://reddify.roope.sh/ws/";
 
     var container = document.getElementById("container");
-    
+
     function refreshToken(){
 
         var cookie = getCookie("refreshToken");
@@ -162,8 +162,8 @@ animation: b1 1s infinite linear;
         return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
             (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
         );
-    }   
-    
+    }
+
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -178,11 +178,11 @@ animation: b1 1s infinite linear;
         }
         return cookieValue;
     }
-  
+
     if(getCookie("accessToken")!=null){
         axios.get('https://api.spotify.com/v1/me', {headers: { "Authorization": `Bearer ${getCookie("accessToken")}` }})
         .then(function (response) {
-            container.innerHTML = 
+            container.innerHTML =
             `
             <div class="container mt-5 text-center">
                 <div class="row p-2">
@@ -388,11 +388,11 @@ animation: b1 1s infinite linear;
                                     <option value="XK">XK - Kosovo</option>
                                     <option value="ZA">ZA - South Africa</option>
                                     <option value="ZM">ZM - Zambia</option>
-                                    <option value="ZW">ZW - Zimbabwe</option>  
+                                    <option value="ZW">ZW - Zimbabwe</option>
                                 </select>
                             </div>
                         </div>
-                        
+
                         <div class="col-6">
                             <div class="form-group">
                                 <div class="form-check form-check-inline">
