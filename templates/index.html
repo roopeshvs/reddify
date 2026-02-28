@@ -62,11 +62,6 @@ animation: b1 1s infinite linear;
     });
     </script>
 <script>
-    var url = window.location.href;
-    var port = window.location.port;
-    var isLocal = url.includes("localhost");
-    var wsUrl = isLocal ? "ws://localhost:" + port + "/ws/" : "wss://reddify.roope.sh/ws/";
-
     var container = document.getElementById("container");
 
     function refreshToken(){
@@ -84,19 +79,47 @@ animation: b1 1s infinite linear;
         });
     }
 
-    function search(){
+    function handleMessage(data, status, container) {
+        console.log(data);
+        if (data.hasOwnProperty('new_access_token')) {
+            document.cookie = "accessToken=" + data["new_access_token"] + "; path=/";
+        }
+        if (data.hasOwnProperty('status') && (data["status"].startsWith("Hooray") || data["status"].startsWith("Invalid") || data["status"].startsWith("Couldn't") || data["status"].startsWith("An unexpected"))) {
+            document.getElementById("url").value = "";
+            document.getElementById("search-btn").disabled = false;
+            status.innerHTML = `<div class="status-text" id="status-text"> ${data["status"]}</div>`;
+            if (data.hasOwnProperty('playlist_url')) {
+                container.insertAdjacentHTML("beforeend", `<div class="playlist-container" id="playlist-container"><button class="playlist-btn btn btn-dark" onclick="window.open('${data["playlist_url"]}', '_blank')">Open <i class="fa fa-spotify"></i> Playlist</button></div>`);
+            }
+        } else if (data.hasOwnProperty('status')) {
+            status.innerHTML = `<div class="status-text pb-2" id="status-text"> ${data["status"]}</div><div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-auto pb-2">
+                        <div class="bars-1"></div>
+                        <br>
+                    </div>
+                </div>
+            </div>`;
+        } else if (data.hasOwnProperty('message')) {
+            var songList = document.getElementById("song-list");
+            songList.insertAdjacentHTML("beforeend", `<p class="song"> ${data["message"]} </p>`);
+            songList.scrollTop = songList.scrollHeight;
+        }
+    }
+
+    async function search() {
         var url = document.getElementById("url").value;
         var location = document.getElementById("location-selector").value;
-        var private = document.getElementById("private").checked;
+        var isPrivate = document.getElementById("private").checked;
         if (document.getElementById("song-list") != null)
             document.getElementById("song-list").remove();
         if (document.getElementById("playlist-container") != null)
             document.getElementById("playlist-container").remove();
         if (document.getElementById("status-text") != null)
             document.getElementById("status-text").remove();
-        if (document.getElementsByClassName("song")){
+        if (document.getElementsByClassName("song")) {
             var songs = document.getElementsByClassName("song");
-            while(songs.length > 0){
+            while (songs.length > 0) {
                 songs[0].remove();
             }
         }
@@ -104,64 +127,68 @@ animation: b1 1s infinite linear;
         const status = document.querySelector("#status");
 
         document.getElementById("search-btn").disabled = true;
-        if (url == "" || !url.includes("reddit.com")){
-            status.innerHTML = `<div class="status-text" id="status-text"> Invalid URL. Please enter a valid Reddit Post URL.</div> `
+        if (url == "" || !url.includes("reddit.com")) {
+            status.innerHTML = `<div class="status-text" id="status-text"> Invalid URL. Please enter a valid Reddit Post URL.</div>`;
             document.getElementById("search-btn").disabled = false;
             return;
         }
-        if (!url.match(/https:\/\/www.reddit.com\/r\/[a-zA-Z0-9]+\/comments\/[a-zA-Z0-9]+\/[a-zA-Z0-9]+/)){
-            status.innerHTML = `<div class="status-text" id="status-text"> Invalid URL Pattern. If you copied the link using the Mobile App, paste the copied link into your browser, copy and paste the expanded link here.</div> `
+        if (!url.match(/https:\/\/www.reddit.com\/r\/[a-zA-Z0-9]+\/comments\/[a-zA-Z0-9]+\/[a-zA-Z0-9]+/)) {
+            status.innerHTML = `<div class="status-text" id="status-text"> Invalid URL Pattern. If you copied the link using the Mobile App, paste the copied link into your browser, copy and paste the expanded link here.</div>`;
             document.getElementById("search-btn").disabled = false;
             return;
         }
-        var ws = new WebSocket(wsUrl + uuidv4());
-        ws.onopen = function(){
-            ws.send(JSON.stringify({
-                "url": url,
-                "location": location,
-                "type": private ? "private" : "public"
-        }));
-        }
-        ws.onclose = function(){
-            if (event.code != 1000){
-                console.log("CODE:", event.code)
-                console.log("Connection closed due to an error.");
-                status.innerHTML = `<div class="status-text" id="status-text"> Connection closed unexpectedly due to a server error. Please try again later.</div> `
-            }
-            document.getElementById("search-btn").disabled = false;
-        }
-        container.insertAdjacentHTML("beforeend", `<div style="height: 32rem; overflow-y: auto; border-radius: 10px; padding: 10px;" " class="w-100 p-3 song-list text-center" id="song-list" ></div>`);
-        ws.onmessage = function(event){
-            console.log(event.data);
-            var data = JSON.parse(event.data);
-            if(data.hasOwnProperty('status') && (data["status"].startsWith("Hooray") || data["status"].startsWith("Invalid"))){
-                document.getElementById("url").value = "";
-                document.getElementById("search-btn").disabled = false;
-                status.innerHTML = `<div class="status-text" id="status-text"> ${data["status"]}</div>`
-                if(data.hasOwnProperty('playlist_url')){
-                    container.insertAdjacentHTML("beforeend", `<div class = "playlist-container" id="playlist-container"><button class="playlist-btn btn btn-dark" onclick="window.open('${data["playlist_url"]}', '_blank')">Open <i class="fa fa-spotify"></i> Playlist</button></div>`)
-                }
-                } else if (data.hasOwnProperty('status')){
-                status.innerHTML = `<div class="status-text pb-2" id="status-text"> ${data["status"]}</div><div class="container">
-                    <div class="row justify-content-center">
-                        <div class="col-auto pb-2">
-                            <div class="bars-1"></div>
-                            <br>
-                        </div>
-                    </div>
-                </div>`;
-            } else {
-            var songList = document.getElementById("song-list");
-            songList.insertAdjacentHTML("beforeend", `<p class="song"> ${data["message"]} </p>`);
-            songList.scrollTop = songList.scrollHeight;
-            }
-        }
-    }
 
-    function uuidv4() {
-        return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
-            (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
-        );
+        container.insertAdjacentHTML("beforeend", `<div style="height: 32rem; overflow-y: auto; border-radius: 10px; padding: 10px;" class="w-100 p-3 song-list text-center" id="song-list"></div>`);
+
+        try {
+            const response = await fetch("/stream", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    "url": url,
+                    "location": location,
+                    "type": isPrivate ? "private" : "public"
+                }),
+                credentials: "same-origin"
+            });
+
+            if (!response.ok) {
+                status.innerHTML = `<div class="status-text" id="status-text"> Server error. Please try again later.</div>`;
+                document.getElementById("search-btn").disabled = false;
+                return;
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = "";
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split("\n");
+                buffer = lines.pop();
+
+                for (const line of lines) {
+                    if (line.startsWith("data: ")) {
+                        const jsonStr = line.substring(6);
+                        if (jsonStr.trim() === "") continue;
+                        try {
+                            const data = JSON.parse(jsonStr);
+                            handleMessage(data, status, container);
+                        } catch (e) {
+                            console.error("Failed to parse SSE data:", jsonStr, e);
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("Stream error:", error);
+            status.innerHTML = `<div class="status-text" id="status-text"> Connection closed unexpectedly due to a server error. Please try again later.</div>`;
+        } finally {
+            document.getElementById("search-btn").disabled = false;
+        }
     }
 
     function getCookie(name) {
